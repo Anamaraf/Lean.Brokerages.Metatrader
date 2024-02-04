@@ -14,19 +14,22 @@
 */
 
 using NUnit.Framework;
-using QuantConnect.Util;
-using QuantConnect.Interfaces;
 
-namespace QuantConnect.TemplateBrokerage.Tests
+namespace QuantConnect.MetatraderBrokerage.Tests
 {
-    [TestFixture]
-    public class TemplateBrokerageAdditionalTests
+    [TestFixture, Ignore("Not implemented")]
+    public class MetatraderBrokerageSymbolMapperTests
     {
         [Test]
-        public void ParameterlessConstructorComposerUsage()
+        public void ReturnsCorrectLeanSymbol()
         {
-            var brokerage = Composer.Instance.GetExportedValueByTypeName<IDataQueueHandler>("TemplateBrokerage");
-            Assert.IsNotNull(brokerage);
+
+        }
+
+        [Test]
+        public void ReturnsCorrectBrokerageSymbol()
+        {
+
         }
     }
 }

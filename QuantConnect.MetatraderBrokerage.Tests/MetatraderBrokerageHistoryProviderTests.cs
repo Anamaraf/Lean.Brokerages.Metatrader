@@ -23,10 +23,10 @@ using QuantConnect.Securities;
 using QuantConnect.Data.Market;
 using QuantConnect.Lean.Engine.HistoricalData;
 
-namespace QuantConnect.TemplateBrokerage.Tests
+namespace QuantConnect.MetatraderBrokerage.Tests
 {
     [TestFixture, Ignore("Not implemented")]
-    public class TemplateBrokerageHistoryProviderTests
+    public class MetatraderBrokerageHistoryProviderTests
     {
         private static TestCaseData[] TestParameters
         {
@@ -51,7 +51,7 @@ namespace QuantConnect.TemplateBrokerage.Tests
         {
             TestDelegate test = () =>
             {
-                var brokerage = new TemplateBrokerage(null);
+                var brokerage = new MetatraderBrokerage(null);
 
                 var historyProvider = new BrokerageHistoryProvider();
                 historyProvider.SetBrokerage(brokerage);

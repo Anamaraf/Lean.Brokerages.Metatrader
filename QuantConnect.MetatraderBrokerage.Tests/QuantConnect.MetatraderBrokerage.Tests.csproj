@@ -9,10 +9,10 @@
         <Copyright>Copyright ©  2021</Copyright>
         <TestProjectType>UnitTest</TestProjectType>
         <OutputPath>bin\$(Configuration)\</OutputPath>
-        <Product>QuantConnect.TemplateBrokerage.Tests</Product>
-        <AssemblyName>QuantConnect.TemplateBrokerage.Tests</AssemblyName>
-        <RootNamespace>QuantConnect.TemplateBrokerage.Tests</RootNamespace>
-        <AssemblyTitle>QuantConnect.TemplateBrokerage.Tests</AssemblyTitle>
+        <Product>QuantConnect.MetatraderBrokerage.Tests</Product>
+        <AssemblyName>QuantConnect.MetatraderBrokerage.Tests</AssemblyName>
+        <RootNamespace>QuantConnect.MetatraderBrokerage.Tests</RootNamespace>
+        <AssemblyTitle>QuantConnect.MetatraderBrokerage.Tests</AssemblyTitle>
         <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     </PropertyGroup>
 
@@ -28,8 +28,8 @@
 
     <ItemGroup>
       <ProjectReference Include="..\..\Lean\Tests\QuantConnect.Tests.csproj" />
-      <ProjectReference Include="..\QuantConnect.TemplateBrokerage.ToolBox\QuantConnect.TemplateBrokerage.ToolBox.csproj" />
-      <ProjectReference Include="..\QuantConnect.TemplateBrokerage\QuantConnect.TemplateBrokerage.csproj" />
+      <ProjectReference Include="..\QuantConnect.MetatraderBrokerage.ToolBox\QuantConnect.MetatraderBrokerage.ToolBox.csproj" />
+      <ProjectReference Include="..\QuantConnect.MetatraderBrokerage\QuantConnect.MetatraderBrokerage.csproj" />
     </ItemGroup>
 
     <ItemGroup>

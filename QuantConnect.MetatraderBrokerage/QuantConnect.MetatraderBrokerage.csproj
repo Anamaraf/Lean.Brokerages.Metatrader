@@ -3,16 +3,16 @@
     <Configuration Condition=" '$(Configuration)' == '' ">Release</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
     <TargetFramework>net6.0</TargetFramework>
-    <Product>QuantConnect.TemplateBrokerage</Product>
-    <AssemblyName>QuantConnect.TemplateBrokerage</AssemblyName>
-    <RootNamespace>QuantConnect.TemplateBrokerage</RootNamespace>
-    <AssemblyTitle>QuantConnect.TemplateBrokerage</AssemblyTitle>
+    <Product>QuantConnect.MetatraderBrokerage</Product>
+    <AssemblyName>QuantConnect.MetatraderBrokerage</AssemblyName>
+    <RootNamespace>QuantConnect.MetatraderBrokerage</RootNamespace>
+    <AssemblyTitle>QuantConnect.MetatraderBrokerage</AssemblyTitle>
     <OutputType>Library</OutputType>
     <OutputPath>bin\$(Configuration)\</OutputPath>
     <AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
     <CopyLocalLockFileAssemblies>true</CopyLocalLockFileAssemblies>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
-    <Description>QuantConnect LEAN Template Brokerage: Brokerage Template plugin for Lean</Description>
+    <Description>QuantConnect LEAN Metatrader Brokerage: Brokerage Metatrader plugin for Lean</Description>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugType>full</DebugType>

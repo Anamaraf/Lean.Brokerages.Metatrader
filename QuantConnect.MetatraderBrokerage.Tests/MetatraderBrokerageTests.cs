@@ -19,10 +19,10 @@ using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using QuantConnect.Tests.Brokerages;
 
-namespace QuantConnect.TemplateBrokerage.Tests
+namespace QuantConnect.MetatraderBrokerage.Tests
 {
     [TestFixture, Ignore("Not implemented")]
-    public partial class TemplateBrokerageTests : BrokerageTests
+    public partial class MetatraderBrokerageTests : BrokerageTests
     {
         protected override Symbol Symbol { get; }
         protected override SecurityType SecurityType { get; }

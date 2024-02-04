@@ -17,15 +17,15 @@ using NUnit.Framework;
 using QuantConnect.Interfaces;
 using QuantConnect.Util;
 
-namespace QuantConnect.TemplateBrokerage.Tests
+namespace QuantConnect.MetatraderBrokerage.Tests
 {
-    [TestFixture, Ignore("This test requires a configured TemplateBrokerageFactory")]
-    public class TemplateBrokerageFactoryTests
+    [TestFixture, Ignore("This test requires a configured MetatraderBrokerageFactory")]
+    public class MetatraderBrokerageFactoryTests
     {
         [Test]
         public void InitializesFactoryFromComposer()
         {
-            using var factory = Composer.Instance.Single<IBrokerageFactory>(instance => instance.BrokerageType == typeof(TemplateBrokerage));
+            using var factory = Composer.Instance.Single<IBrokerageFactory>(instance => instance.BrokerageType == typeof(MetatraderBrokerage));
             Assert.IsNotNull(factory);
         }
     }
