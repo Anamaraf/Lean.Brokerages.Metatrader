@@ -30,13 +30,42 @@ namespace QuantConnect.MetatraderBrokerage
     [BrokerageFactory(typeof(MetatraderBrokerageFactory))]
     public class MetatraderBrokerage : Brokerage, IDataQueueHandler, IDataQueueUniverseProvider
     {
-        private readonly IDataAggregator _aggregator;
-        private readonly EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
+        private IDataAggregator _aggregator;
+        
+        /// <summary>
+        /// Count subscribers for each (symbol, tickType) combination
+        /// </summary>
+        private EventBasedDataQueueHandlerSubscriptionManager _subscriptionManager;
 
+        /// <summary>
+        /// Live job task packet: container for any live specific job variables
+        /// </summary>
+        private LiveNodePacket _job;
+
+        /// <summary>
+        /// Provide data from external algorithm
+        /// </summary>
+        private IAlgorithm _algorithm;
+
+        /// <summary>
+        ///  Provides the mapping between Lean symbols and brokerage symbols
+        /// </summary>
+        private SymbolPropertiesDatabaseSymbolMapper _symbolMapper;
+
+        /// <summary>
+        /// Represents the name of the market associated with the application.
+        /// </summary>
+        private static readonly string MarketName = Market.Metatrader;
+        
         /// <summary>
         /// Returns true if we're currently connected to the broker
         /// </summary>
         public override bool IsConnected { get; }
+
+        /// <summary>
+        /// Order provider
+        /// </summary>
+        protected IOrderProvider OrderProvider { get; private set; }
 
         /// <summary>
         /// Parameterless constructor for brokerage
@@ -44,14 +73,32 @@ namespace QuantConnect.MetatraderBrokerage
         /// <remarks>This parameterless constructor is required for brokerages implementing <see cref="IDataQueueHandler"/></remarks>
         public MetatraderBrokerage()
             : this(Composer.Instance.GetPart<IDataAggregator>())
+            {
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MetatraderBrokerage"/> class with set of parameters.
+        /// </summary>
+        /// <param name="algorithm">The algorithm instance is required to retrieve account type</param>
+        /// <param name="orderProvider">The order provider</param>
+        /// <param name="aggregator">Consolidate ticks</param>
+        /// <param name="job">The live job packet</param>
+        public MetatraderBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, IDataAggregator aggregator, LiveNodePacket job)
+            : base(MarketName)
         {
+            Initialize(
+                algorithm: algorithm,
+                orderProvider: orderProvider,
+                aggregator: aggregator,
+                job: job
+            );
         }
 
         /// <summary>
         /// Creates a new instance
         /// </summary>
         /// <param name="aggregator">consolidate ticks</param>
-        public MetatraderBrokerage(IDataAggregator aggregator) : base("MetatraderBrokerage")
+        public MetatraderBrokerage(IDataAggregator aggregator) : base(MarketName)
         {
             _aggregator = aggregator;
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
@@ -66,6 +113,26 @@ namespace QuantConnect.MetatraderBrokerage
 
             // Rate gate limiter useful for API/WS calls
             // _connectionRateLimiter = new RateGate();
+        }
+
+        /// <summary>
+        /// Initialize the instance of this class
+        /// </summary>
+        /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
+        /// <param name="orderProvider">The order provider</param>
+        /// <param name="aggregator">the aggregator for consolidating ticks</param>
+        /// <param name="job">The live job packet</param>
+        protected void Initialize(IAlgorithm algorithm, IOrderProvider orderProvider, IDataAggregator aggregator, LiveNodePacket job)
+        {
+            _job = job;
+            _algorithm = algorithm;
+            _aggregator = aggregator;
+            _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(MarketName);
+            OrderProvider = orderProvider;
+
+            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
+            _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
+            _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
         }
 
         #region IDataQueueHandler

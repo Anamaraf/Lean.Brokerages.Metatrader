@@ -15,7 +15,9 @@
 
 using System;
 using QuantConnect.Packets;
+using QuantConnect;
 using QuantConnect.Brokerages;
+using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
@@ -34,7 +36,10 @@ namespace QuantConnect.MetatraderBrokerage
         /// The implementation of this property will create the brokerage data dictionary required for
         /// running live jobs. See <see cref="IJobQueueHandler.NextJob"/>
         /// </remarks>
-        public override Dictionary<string, string> BrokerageData { get; }
+        public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
+        {
+            { "metatrader-exchange-directory", Config.Get("metatrader-exchange-directory") },
+        };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MetatraderBrokerageFactory"/> class
@@ -49,7 +54,7 @@ namespace QuantConnect.MetatraderBrokerage
         /// <param name="orderProvider">The order provider</param>
         public override IBrokerageModel GetBrokerageModel(IOrderProvider orderProvider)
         {
-            throw new NotImplementedException();
+            return new MetatraderBrokerageModel();
         }
 
         /// <summary>
@@ -60,7 +65,7 @@ namespace QuantConnect.MetatraderBrokerage
         /// <returns>A new brokerage instance</returns>
         public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
-            throw new NotImplementedException();
+            return new MetatraderBrokerage();
         }
 
         /// <summary>
