@@ -21,6 +21,8 @@ using QuantConnect.Configuration;
 using QuantConnect.Interfaces;
 using QuantConnect.Securities;
 using System.Collections.Generic;
+using QuantConnect.Data;
+using QuantConnect.Util;
 
 namespace QuantConnect.MetatraderBrokerage
 {
@@ -38,7 +40,10 @@ namespace QuantConnect.MetatraderBrokerage
         /// </remarks>
         public override Dictionary<string, string> BrokerageData => new Dictionary<string, string>
         {
-            { "metatrader-exchange-directory", Config.Get("metatrader-exchange-directory") },
+            { "metatrader-market", Config.Get("metatrader-market") },
+            { "metatrader-api", Config.Get("metatrader-api") },
+            { "metatrader-account-id", Config.Get("metatrader-account-id") },
+            { "metatrader-files-directory", Config.Get("metatrader-files-directory") },
         };
 
         /// <summary>
@@ -65,7 +70,31 @@ namespace QuantConnect.MetatraderBrokerage
         /// <returns>A new brokerage instance</returns>
         public override IBrokerage CreateBrokerage(LiveNodePacket job, IAlgorithm algorithm)
         {
-            return new MetatraderBrokerage();
+            var errors = new List<string>();
+            var parameters = new Dictionary<string, object>();
+
+            // read values from the brokerage data
+            var market = Read<string>(job.BrokerageData, "metatrader-market", errors);
+            var apiName = Read<string>(job.BrokerageData, "metatrader-api", errors);
+            parameters["metatrader-account-id"] = Read<uint>(job.BrokerageData, "metatrader-account-id", errors);
+            parameters["metatrader-files-directory"] = Read<string>(job.BrokerageData, "metatrader-files-directory", errors);
+            
+            if (errors.Count != 0)
+            {
+                // if we had errors then we can't create the instance
+                throw new Exception(string.Join(System.Environment.NewLine, errors));
+            }
+
+            var brokerage = new MetatraderBrokerage(
+                job,
+                algorithm,
+                Composer.Instance.GetExportedValueByTypeName<IDataAggregator>(Config.Get("data-aggregator", "QuantConnect.Lean.Engine.DataFeeds.AggregationManager"), forceTypeNameOnExisting: false),
+                market,
+                apiName,
+                parameters);
+            Composer.Instance.AddPart<IDataQueueHandler>(brokerage);
+
+            return brokerage;
         }
 
         /// <summary>

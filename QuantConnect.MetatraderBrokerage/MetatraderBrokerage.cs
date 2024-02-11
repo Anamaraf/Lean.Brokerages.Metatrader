@@ -24,6 +24,8 @@ using QuantConnect.Securities;
 using QuantConnect.Brokerages;
 using System.Collections.Generic;
 using QuantConnect.MetatraderBrokerage;
+using QuantConnect.MetatraderBrokerage.Api;
+using QuantConnect.Api;
 
 namespace QuantConnect.MetatraderBrokerage
 {
@@ -48,6 +50,11 @@ namespace QuantConnect.MetatraderBrokerage
         private IAlgorithm _algorithm;
 
         /// <summary>
+        /// Represents an instance of the Metatrader API.
+        /// </summary>
+        private MetatraderApiBase _api;
+
+        /// <summary>
         ///  Provides the mapping between Lean symbols and brokerage symbols
         /// </summary>
         private SymbolPropertiesDatabaseSymbolMapper _symbolMapper;
@@ -55,84 +62,56 @@ namespace QuantConnect.MetatraderBrokerage
         /// <summary>
         /// Represents the name of the market associated with the application.
         /// </summary>
-        private static readonly string MarketName = Market.Metatrader;
+        private static string MarketName;
         
-        /// <summary>
-        /// Returns true if we're currently connected to the broker
-        /// </summary>
-        public override bool IsConnected { get; }
-
         /// <summary>
         /// Order provider
         /// </summary>
         protected IOrderProvider OrderProvider { get; private set; }
 
-        /// <summary>
-        /// Parameterless constructor for brokerage
-        /// </summary>
-        /// <remarks>This parameterless constructor is required for brokerages implementing <see cref="IDataQueueHandler"/></remarks>
-        public MetatraderBrokerage()
-            : this(Composer.Instance.GetPart<IDataAggregator>())
-            {
-        }
+        ///// <summary>
+        ///// Initializes a new instance of the <see cref="MetatraderBrokerage"/> class.
+        ///// </summary>
+        //public MetatraderBrokerage() : base("Metatrader Brokerage")
+        //{
+        //}
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="MetatraderBrokerage"/> class with set of parameters.
+        /// Initializes a new instance of the <see cref="MetatraderBrokerage"/> class.
         /// </summary>
-        /// <param name="algorithm">The algorithm instance is required to retrieve account type</param>
-        /// <param name="orderProvider">The order provider</param>
-        /// <param name="aggregator">Consolidate ticks</param>
-        /// <param name="job">The live job packet</param>
-        public MetatraderBrokerage(IAlgorithm algorithm, IOrderProvider orderProvider, IDataAggregator aggregator, LiveNodePacket job)
-            : base(MarketName)
-        {
-            Initialize(
-                algorithm: algorithm,
-                orderProvider: orderProvider,
-                aggregator: aggregator,
-                job: job
-            );
-        }
-
-        /// <summary>
-        /// Creates a new instance
-        /// </summary>
-        /// <param name="aggregator">consolidate ticks</param>
-        public MetatraderBrokerage(IDataAggregator aggregator) : base(MarketName)
-        {
-            _aggregator = aggregator;
-            _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
-            _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
-            _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
-
-            // Useful for some brokerages:
-
-            // Brokerage helper class to lock websocket message stream while executing an action, for example placing an order
-            // avoid race condition with placing an order and getting filled events before finished placing
-            // _messageHandler = new BrokerageConcurrentMessageHandler<>();
-
-            // Rate gate limiter useful for API/WS calls
-            // _connectionRateLimiter = new RateGate();
-        }
-
-        /// <summary>
-        /// Initialize the instance of this class
-        /// </summary>
-        /// <param name="algorithm">the algorithm instance is required to retrieve account type</param>
-        /// <param name="orderProvider">The order provider</param>
-        /// <param name="aggregator">the aggregator for consolidating ticks</param>
-        /// <param name="job">The live job packet</param>
-        protected void Initialize(IAlgorithm algorithm, IOrderProvider orderProvider, IDataAggregator aggregator, LiveNodePacket job)
+        /// <param name="job"></param>
+        /// <param name="algorithm"></param>
+        /// <param name="aggregator"></param>
+        /// <param name="marketName"></param>
+        /// <param name="apiName"></param>
+        /// <param name="apiParameters"></param>
+        public MetatraderBrokerage(
+            LiveNodePacket job,
+            IAlgorithm algorithm, 
+            IDataAggregator aggregator,
+            string marketName,
+            string apiName,
+            Dictionary<string, object> apiParameters)
+            : base("Metatrader Brokerage")
         {
             _job = job;
             _algorithm = algorithm;
             _aggregator = aggregator;
-            _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(MarketName);
-            OrderProvider = orderProvider;
+            _symbolMapper = new SymbolPropertiesDatabaseSymbolMapper(marketName);
+            OrderProvider = algorithm.Transactions;
 
             _subscriptionManager = new EventBasedDataQueueHandlerSubscriptionManager();
             _subscriptionManager.SubscribeImpl += (s, t) => Subscribe(s);
             _subscriptionManager.UnsubscribeImpl += (s, t) => Unsubscribe(s);
+
+            //_api = new OandaRestApiV20(_symbolMapper, orderProvider, securityProvider, aggregator, environment, accessToken, accountId, agent);
+            _api = MetatraderApiBase.Create(apiName, _symbolMapper, algorithm?.Portfolio, apiParameters);
+            
+            // forward events received from API
+            _api.OrdersStatusChanged += (sender, orderEvents) => OnOrderEvents(orderEvents);
+            _api.AccountChanged += (sender, accountEvent) => OnAccountChanged(accountEvent);
+            _api.Message += (sender, messageEvent) => OnMessage(messageEvent);
+
         }
 
         #region IDataQueueHandler
@@ -238,21 +217,32 @@ namespace QuantConnect.MetatraderBrokerage
         }
 
         /// <summary>
-        /// Connects the client to the broker's remote servers
+        /// Returns true if we're currently connected to the broker
+        /// </summary>
+        public override bool IsConnected => _api.IsConnected;
+        
+        /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public override string AccountBaseCurrency => _api.AccountBaseCurrency;
+
+        /// <summary>
+        /// Connects the client to the broker's Api
         /// </summary>
         public override void Connect()
         {
-            throw new NotImplementedException();
+            if (IsConnected) return;
+
+            _api.Connect();
         }
 
         /// <summary>
-        /// Disconnects the client from the broker's remote servers
+        /// Disconnects the client from the broker's Api
         /// </summary>
         public override void Disconnect()
         {
-            throw new NotImplementedException();
+            _api.Disconnect();
         }
-
         #endregion
 
         #region IDataQueueUniverseProvider
