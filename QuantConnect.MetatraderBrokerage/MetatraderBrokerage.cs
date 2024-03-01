@@ -159,6 +159,33 @@ namespace QuantConnect.MetatraderBrokerage
         #region Brokerage
 
         /// <summary>
+        /// Returns true if we're currently connected to the broker
+        /// </summary>
+        public override bool IsConnected => _api.IsConnected;
+
+        /// <summary>
+        /// Returns the brokerage account's base currency
+        /// </summary>
+        public override string AccountBaseCurrency => _api.AccountBaseCurrency;
+
+        /// <summary>
+        /// Connects the client to the broker's Api
+        /// </summary>
+        public override void Connect()
+        {
+            if (IsConnected) return;
+
+            _api.Connect();
+        }
+
+        /// <summary>
+        /// Disconnects the client from the broker's Api
+        /// </summary>
+        public override void Disconnect()
+        {
+            _api.Disconnect();
+        }
+        /// <summary>
         /// Gets all open orders on the account.
         /// NOTE: The order objects returned do not have QC order IDs.
         /// </summary>
@@ -216,33 +243,6 @@ namespace QuantConnect.MetatraderBrokerage
             throw new NotImplementedException();
         }
 
-        /// <summary>
-        /// Returns true if we're currently connected to the broker
-        /// </summary>
-        public override bool IsConnected => _api.IsConnected;
-        
-        /// <summary>
-        /// Returns the brokerage account's base currency
-        /// </summary>
-        public override string AccountBaseCurrency => _api.AccountBaseCurrency;
-
-        /// <summary>
-        /// Connects the client to the broker's Api
-        /// </summary>
-        public override void Connect()
-        {
-            if (IsConnected) return;
-
-            _api.Connect();
-        }
-
-        /// <summary>
-        /// Disconnects the client from the broker's Api
-        /// </summary>
-        public override void Disconnect()
-        {
-            _api.Disconnect();
-        }
         #endregion
 
         #region IDataQueueUniverseProvider

@@ -13,8 +13,8 @@ namespace QuantConnect.MetatraderBrokerage.Api
 {
     public abstract class MetatraderApiBase : Brokerage, IDataQueueHandler
     {
-        public SymbolPropertiesDatabaseSymbolMapper SymbolMapper { get; }
-        public SecurityPortfolioManager Portfolio { get; }
+        public SymbolPropertiesDatabaseSymbolMapper SymbolMapper { get; protected set; }
+        public SecurityPortfolioManager Portfolio { get; protected set; }
 
         /// <summary>
         /// Returns true if we're currently connected to the broker

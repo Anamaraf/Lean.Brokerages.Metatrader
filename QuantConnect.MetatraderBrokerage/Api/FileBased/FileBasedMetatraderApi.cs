@@ -1,6 +1,5 @@
 ﻿using Newtonsoft.Json.Linq;
 using QuantConnect.Brokerages;
-using QuantConnect.Logging;
 using QuantConnect.Orders;
 using QuantConnect.Securities;
 using System;
@@ -17,12 +16,6 @@ namespace QuantConnect.MetatraderBrokerage.Api.FileBased
 {
     internal class FileBasedMetatraderApi : MetatraderApiBase
     {
-        public SymbolPropertiesDatabaseSymbolMapper SymbolMapper => throw new NotImplementedException();
-
-        public SecurityPortfolioManager Portfolio => throw new NotImplementedException();
-
-        public string AccountBaseCurrency { get => throw new NotImplementedException(); set => throw new NotImplementedException(); }
-        
         int _sleepDelay = 5;  // milliseconds
         int _maxRetryCommandSeconds = 10;
         bool _loadOrdersFromFile = true;
@@ -78,11 +71,15 @@ namespace QuantConnect.MetatraderBrokerage.Api.FileBased
             string filesDirectory)
             : base("Metatrader Brokerage")
         {
+            SymbolMapper = symbolMapper;
+            Portfolio = portfolio;
+
             _metatraderFilesDirectory = filesDirectory;
 
             if (!Directory.Exists(_metatraderFilesDirectory))
-                throw new Exception($"Directory does not exist. metatrader-files-directory: {_metatraderFilesDirectory}");
-            
+                Utils.ThrowException("FileBasedMetatraderApi", "FileBasedMetatraderApi",
+                    $"Directory does not exist. metatrader-files-directory: {_metatraderFilesDirectory}");    
+
             _pathOrders = Path.Join(_metatraderFilesDirectory, "DWX", "DWX_Orders.txt");
             _pathMessages = Path.Join(_metatraderFilesDirectory, "DWX", "DWX_Messages.txt");
             _pathMarketData = Path.Join(_metatraderFilesDirectory, "DWX", "DWX_Market_Data.txt");
@@ -93,7 +90,7 @@ namespace QuantConnect.MetatraderBrokerage.Api.FileBased
             _pathMessagesStored = Path.Join(_metatraderFilesDirectory, "DWX", "DWX_Messages_Stored.txt");
             _pathCommandsPrefix = Path.Join(_metatraderFilesDirectory, "DWX", "DWX_Commands_");
 
-            UpdateLastMessageTimestamp();
+            //UpdateLastMessageTimestamp();
 
             if (_loadOrdersFromFile)
                 loadOrders();
@@ -122,9 +119,9 @@ namespace QuantConnect.MetatraderBrokerage.Api.FileBased
 
         public override void Connect()
         {
-            _isConnected = true;
+            AccountBaseCurrency = GetAccountBaseCurrency();
 
-            throw new NotImplementedException();
+            _isConnected = true;
         }
 
         public override void Disconnect()
@@ -589,10 +586,9 @@ namespace QuantConnect.MetatraderBrokerage.Api.FileBased
             }
             catch (Exception e)
             {
-                string errorText = $"FileBasedMetatraderApi.loadMessages(): The contents of the file " + 
-                    $"{_pathMessagesStored} could not be parsed as JSON object. Content: {text}";
-                Log.Error(errorText);
-                throw new BrokerageException(errorText);
+                Utils.ThrowException("FileBasedMetatraderApi", "loadMessages", 
+                    $"The contents of the file {_pathMessagesStored} could not be parsed as JSON object. Content: {text}");
+                return;
             }
 
             if (data == null)
